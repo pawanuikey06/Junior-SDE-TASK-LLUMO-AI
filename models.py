@@ -1,13 +1,13 @@
 from pydantic import BaseModel ,Field
 from typing import List ,Optional
-from datetime import date
+from datetime import datetime
 
 
 class EmployeeBase(BaseModel):
     name: str
     department:str
     salary:int
-    joining_date:date
+    joining_date:datetime
     skills:List[str]
 
 
@@ -16,8 +16,8 @@ class CreateEmployee(EmployeeBase):
 
 
 class UpdateEmployee(BaseModel):
-    name: Optional[str]
-    department: Optional[str]
-    salary: Optional[int]
-    joining_date: Optional[date]
-    skills: Optional[List[str]]
+    name: Optional[str] = None
+    department: Optional[str] = None
+    salary: Optional[int] = None
+    skills: Optional[List[str]] = None
+
