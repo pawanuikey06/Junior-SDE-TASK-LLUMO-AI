@@ -6,7 +6,8 @@ API_URL = "http://127.0.0.1:8000"
 st.title("👩‍💻 Employee Management UI")
 
 # --- Sidebar navigation ---
-menu = ["Add Employee", "Search Employee", "Update Employee", "List Employees", "Delete Employee"]
+menu = ["Add Employee", "Search Employee", "Update Employee", "List Employees", "Delete Employee",
+        "Employees by Department", "Average Salary by Department","Search Employees by Skill"]
 choice = st.sidebar.selectbox("Select Action", menu)
 
 # --- Add Employee Page ---
@@ -24,10 +25,11 @@ if choice == "Add Employee":
             "employee_id": employee_id,
             "name": name,
             "department": department,
-            "salary": salary,
+            "salary": int(salary),
             "joining_date": str(joining_date),
             "skills": [s.strip() for s in skills.split(",") if s.strip()]
         }
+
         res = requests.post(f"{API_URL}/employees", json=payload)
         if res.status_code == 200:
             st.success("✅ Employee added successfully!")
@@ -110,3 +112,46 @@ elif choice == "Delete Employee":
                 st.success(res.json()["message"])
             else:
                 st.error(f"❌ Error: {res.text}")
+
+
+# --- Employees by Department Page ---
+elif choice == "Employees by Department":
+    st.header("Employees by Department")
+    dept_filter = st.text_input("Enter Department to Filter")
+    if st.button("Show Employees"):
+        res = requests.get(f"{API_URL}/employees?department={dept_filter}")
+        if res.status_code == 200:
+            employees = res.json()
+            if employees:
+                st.table(employees)
+            else:
+                st.warning("No employees found in this department.")
+        else:
+            st.error("Failed to fetch employees.")
+
+# --- Average Salary by Department Page ---
+elif choice == "Average Salary by Department":
+    st.header("Average Salary by Departments")
+    if st.button("Show Average Salary"):
+        res = requests.get(f"{API_URL}/employees/avg-salary")
+        if res.status_code == 200:
+            avg_salaries = res.json()
+            st.table(avg_salaries)
+        else:
+            st.error("Failed to fetch average salary.")
+
+# --- Search Employees by Skill Page ---
+elif choice == "Search Employees by Skill":
+    st.header("Search Employees by Skill")
+    skill_input = st.text_input("Enter skill to search")
+    if st.button("Search"):
+        if skill_input.strip():
+            res = requests.get(f"{API_URL}/employees/search?skill={skill_input}")
+            if res.status_code == 200:
+                data = res.json()
+                if isinstance(data, list) and data:
+                    st.table(data)
+                else:
+                    st.warning(data.get("message", "No results"))
+            else:
+                st.error("Failed to search employees.")
