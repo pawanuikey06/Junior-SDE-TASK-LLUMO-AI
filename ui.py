@@ -6,7 +6,7 @@ API_URL = "http://127.0.0.1:8000"
 st.title("👩‍💻 Employee Management UI")
 
 # --- Sidebar navigation ---
-menu = ["Add Employee", "Search Employee", "Update Employee", "List Employees", "Delete Employee",
+menu = ["Add Employee", "Search Employee", "Update Employee",  "Delete Employee",
         "Employees by Department", "Average Salary by Department","Search Employees by Skill"]
 choice = st.sidebar.selectbox("Select Action", menu)
 
@@ -133,7 +133,7 @@ elif choice == "Employees by Department":
 elif choice == "Average Salary by Department":
     st.header("Average Salary by Departments")
     if st.button("Show Average Salary"):
-        res = requests.get(f"{API_URL}/employees/avg-salary")
+        res = requests.get(f"{API_URL}/analytics/avg-salary")
         if res.status_code == 200:
             avg_salaries = res.json()
             st.table(avg_salaries)
@@ -146,7 +146,7 @@ elif choice == "Search Employees by Skill":
     skill_input = st.text_input("Enter skill to search")
     if st.button("Search"):
         if skill_input.strip():
-            res = requests.get(f"{API_URL}/employees/search?skill={skill_input}")
+            res = requests.get(f"{API_URL}/analytics/search?skill={skill_input}")
             if res.status_code == 200:
                 data = res.json()
                 if isinstance(data, list) and data:
