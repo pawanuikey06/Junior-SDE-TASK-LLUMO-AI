@@ -44,61 +44,27 @@ async def average_salary_by_department():
 
 # --- Search Employees by Skill ---
 @router.get("/search")
-async def search_employees_by_skill(skill: str = Query(None, description="Skill to search for (optional)")):
+async def search_employees_by_skill(skill: str = Query(..., description="Skill to search for")):
     """
-    Return employees who have the given skill in their skills array.
-    If no skill is provided, return all distinct skills available.
-    Example: /employees/search?skill=Python
+    Search employees by skill (case-insensitive, partial match)
+    Example: /analytics/search?skill=AI
     """
-    try:
-        # If skill not provided → return all available skills
-        if not skill:
-            pipeline = [
-                {"$unwind": "$skills"},
-                {"$group": {"_id": "$skills"}},
-                {"$sort": {"_id": 1}},
-            ]
-            all_skills = await employee_collection.aggregate(pipeline).to_list(length=None)
-            available_skills = [s["_id"] for s in all_skills] if all_skills else []
-            return {"available_skills": available_skills, "count": len(available_skills)}
+    if not skill.strip():
+        raise HTTPException(status_code=400, detail="Skill cannot be empty")
 
-        # Otherwise, search employees with that skill
-        queries = [
-            {"skills": {"$regex": f"^{skill}$", "$options": "i"}},   # exact case-insensitive
-            {"skills": {"$regex": skill, "$options": "i"}},          # partial match
-            {"skills": skill},                                       # exact match
-            {"skills": {"$in": [skill, skill.lower(), skill.upper(), skill.title()]}},  # variations
-        ]
+    query = {"skills": {"$elemMatch": {"$regex": skill, "$options": "i"}}}
+    cursor = employee_collection.find(query)
+    results = await cursor.to_list(length=None)
 
-        results = None
-        successful_query = None
+    if not results:
+        raise HTTPException(status_code=404, detail=f"No employees found with skill '{skill}'")
 
-        for i, query in enumerate(queries):
-            cursor = employee_collection.find(query)
-            temp_results = await cursor.to_list(length=None)
-            if temp_results:
-                results = temp_results
-                successful_query = i
-                break
+    # Converting ObjectId to string
+    for emp in results:
+        emp["_id"] = str(emp["_id"])
 
-        if not results:
-            return {
-                "message": f"No employees found with skill '{skill}'",
-                "hint": "Try without ?skill=... to see available skills",
-            }
-
-        # Format employees
-        formatted_results = []
-        for emp in results:
-            emp["_id"] = str(emp["_id"])
-            formatted_results.append(emp)
-
-        return {
-            "count": len(formatted_results),
-            "employees": formatted_results,
-            "query_used": f"Query {successful_query + 1}",
-        }
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error searching employees: {str(e)}")
+    return {
+        "count": len(results),
+        "employees": results
+    }
 

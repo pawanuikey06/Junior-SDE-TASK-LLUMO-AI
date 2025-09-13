@@ -144,14 +144,20 @@ elif choice == "Average Salary by Department":
 elif choice == "Search Employees by Skill":
     st.header("Search Employees by Skill")
     skill_input = st.text_input("Enter skill to search")
+    
     if st.button("Search"):
         if skill_input.strip():
             res = requests.get(f"{API_URL}/analytics/search?skill={skill_input}")
+            
             if res.status_code == 200:
                 data = res.json()
-                if isinstance(data, list) and data:
-                    st.table(data)
+                employees = data.get("employees", [])
+                
+                if employees:
+                    # Display as table
+                    st.table(employees)
                 else:
-                    st.warning(data.get("message", "No results"))
+                    st.warning("No employees found.")
             else:
-                st.error("Failed to search employees.")
+                st.error(f"Failed to search employees. Status: {res.status_code}")
+
