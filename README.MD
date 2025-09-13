@@ -21,7 +21,6 @@ This project is a FastAPI-based backend application that demonstrates CRUD opera
 - **Pydantic** - Data validation
 - **Uvicorn** - ASGI server
 
-## Project Structure
 
 
 
